@@ -264,6 +264,31 @@
   }
 
   .fab-space{height:0;}
+
+  .reset-btn{
+    border:none; background:var(--surface); width:36px; height:36px;
+    border-radius:10px; cursor:pointer; font-size:14px; color:var(--text-soft);
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, color .15s ease;
+  }
+  .reset-btn:hover{ background:var(--expense-soft); color:var(--expense); }
+
+  .reset-options{ display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .reset-option{
+    display:flex; align-items:center; gap:12px;
+    padding:13px 14px; border-radius:14px;
+    border:1px solid var(--border); background:var(--surface);
+    cursor:pointer; text-align:left; font-family:inherit;
+  }
+  .reset-option:hover{ border-color:var(--expense-line); background:var(--expense-soft); }
+  .reset-option input{ accent-color:var(--expense); width:16px; height:16px; }
+  .reset-option-text b{ display:block; font-size:14px; }
+  .reset-option-text span{ font-size:12px; color:var(--text-faint); }
+  .reset-confirm-btn{
+    width:100%; border:none; padding:14px; border-radius:12px;
+    font-family:inherit; font-weight:800; font-size:14.5px; color:#fff;
+    cursor:pointer; background:var(--expense);
+  }
 </style>
 </head>
 <body>
@@ -277,6 +302,7 @@
         <div class="brand-sub">KELOLA UANGMU</div>
       </div>
     </div>
+    <button class="reset-btn" onclick="openResetSheet()" title="Reset data"><i class="fa-solid fa-arrow-rotate-left"></i></button>
   </div>
 </div>
 
@@ -352,6 +378,30 @@
       </div>
       <button type="submit" class="submit-btn" id="submitBtn">Simpan</button>
     </form>
+  </div>
+</div>
+
+<div class="overlay" id="resetOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Reset Data</div>
+      <button class="close-btn" onclick="closeResetSheet()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="reset-options">
+      <label class="reset-option">
+        <input type="radio" name="resetScope" value="expense">
+        <div class="reset-option-text"><b>Hapus pengeluaran saja</b><span>Semua transaksi pengeluaran akan dihapus</span></div>
+      </label>
+      <label class="reset-option">
+        <input type="radio" name="resetScope" value="income">
+        <div class="reset-option-text"><b>Hapus pemasukan saja</b><span>Semua transaksi pemasukan akan dihapus</span></div>
+      </label>
+      <label class="reset-option">
+        <input type="radio" name="resetScope" value="all" checked>
+        <div class="reset-option-text"><b>Hapus semua tabungan</b><span>Semua transaksi akan dihapus, saldo kembali ke 0</span></div>
+      </label>
+    </div>
+    <button type="button" class="reset-confirm-btn" onclick="confirmReset()">Reset Sekarang</button>
   </div>
 </div>
 
@@ -443,6 +493,28 @@ function submitForm(e){
 function deleteTxn(id){
   txns = txns.filter(t => t.id !== id);
   save();
+  render();
+}
+
+function openResetSheet(){
+  document.getElementById('resetOverlay').classList.add('open');
+}
+function closeResetSheet(){
+  document.getElementById('resetOverlay').classList.remove('open');
+}
+document.getElementById('resetOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'resetOverlay') closeResetSheet();
+});
+function confirmReset(){
+  const scope = document.querySelector('input[name="resetScope"]:checked').value;
+  if(scope === 'all'){
+    txns = [];
+  } else {
+    txns = txns.filter(t => t.type !== scope);
+  }
+  save();
+  closeResetSheet();
+  populateMonths();
   render();
 }
 
