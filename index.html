@@ -272,6 +272,7 @@
     transition:background .15s ease, color .15s ease;
   }
   .reset-btn:hover{ background:var(--expense-soft); color:var(--expense); }
+  .menu-btn:hover{ background:var(--surface-2); color:var(--text); }
 
   .menu-wrap{ position:relative; }
   .menu-popup{
@@ -323,7 +324,7 @@
       </div>
     </div>
     <div class="menu-wrap">
-      <button class="reset-btn" onclick="toggleMenuPopup()" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      <button class="reset-btn menu-btn" onclick="toggleMenuPopup()" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
       <div class="menu-popup" id="menuPopup">
         <a class="menu-item" href="https://github.com/galangjs-id/TabunganKu/releases/latest" target="_blank" rel="noopener">
           <i class="fa-solid fa-download"></i> Download App
