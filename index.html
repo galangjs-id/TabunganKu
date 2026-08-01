@@ -273,6 +273,26 @@
   }
   .reset-btn:hover{ background:var(--expense-soft); color:var(--expense); }
 
+  .menu-wrap{ position:relative; }
+  .menu-popup{
+    position:absolute; top:44px; right:0; z-index:50;
+    background:var(--bg); border:1px solid var(--border); border-radius:16px;
+    box-shadow:var(--shadow-card); padding:8px; min-width:210px;
+    display:none; flex-direction:column; gap:2px;
+  }
+  .menu-popup.open{ display:flex; }
+  .menu-item{
+    display:flex; align-items:center; gap:12px; width:100%;
+    border:none; background:transparent; padding:11px 12px; border-radius:11px;
+    font-family:inherit; font-size:13.5px; font-weight:600; color:var(--text);
+    cursor:pointer; text-align:left; text-decoration:none;
+    transition:background .15s ease;
+  }
+  .menu-item:hover{ background:var(--surface); }
+  .menu-item i{ width:18px; text-align:center; color:var(--text-soft); font-size:14px; }
+  .menu-item.danger{ color:var(--expense); }
+  .menu-item.danger i{ color:var(--expense); }
+
   .reset-options{ display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
   .reset-option{
     display:flex; align-items:center; gap:12px;
@@ -302,7 +322,17 @@
         <div class="brand-sub">KELOLA UANGMU</div>
       </div>
     </div>
-    <button class="reset-btn" onclick="openResetSheet()" title="Reset data"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+    <div class="menu-wrap">
+      <button class="reset-btn" onclick="toggleMenuPopup()" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      <div class="menu-popup" id="menuPopup">
+        <a class="menu-item" href="https://github.com/galangjs-id/TabunganKu/releases/latest" target="_blank" rel="noopener">
+          <i class="fa-solid fa-download"></i> Download App
+        </a>
+        <button class="menu-item danger" onclick="closeMenuPopup(); openResetSheet();">
+          <i class="fa-solid fa-arrow-rotate-left"></i> Reset Data
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -507,6 +537,16 @@ function deleteTxn(id){
   render();
 }
 
+function toggleMenuPopup(){
+  document.getElementById('menuPopup').classList.toggle('open');
+}
+function closeMenuPopup(){
+  document.getElementById('menuPopup').classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.menu-wrap');
+  if(wrap && !wrap.contains(e.target)) closeMenuPopup();
+});
 function openResetSheet(){
   document.getElementById('resetOverlay').classList.add('open');
 }
