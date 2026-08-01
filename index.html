@@ -360,7 +360,7 @@
     <form id="txnForm" onsubmit="submitForm(event)">
       <div class="field">
         <label>Jumlah (Rp)</label>
-        <input type="number" id="amount" class="amount-input" placeholder="0" min="0" step="1" required>
+        <input type="text" inputmode="numeric" id="amount" class="amount-input" placeholder="0" required>
       </div>
       <div class="field-row">
         <div class="field">
@@ -471,9 +471,20 @@ document.getElementById('overlay').addEventListener('click', (e) => {
   if(e.target.id === 'overlay') closeSheet();
 });
 
+// Live format ribuan pas ngetik di field amount (mis. 50000 -> 50.000)
+const amountInput = document.getElementById('amount');
+amountInput.addEventListener('input', (e) => {
+  const cursorFromEnd = e.target.value.length - e.target.selectionStart;
+  const raw = e.target.value.replace(/\D/g, '');
+  const formatted = raw ? parseInt(raw, 10).toLocaleString('id-ID') : '';
+  e.target.value = formatted;
+  const newPos = Math.max(formatted.length - cursorFromEnd, 0);
+  e.target.setSelectionRange(newPos, newPos);
+});
+
 function submitForm(e){
   e.preventDefault();
-  const amount = parseFloat(document.getElementById('amount').value);
+  const amount = parseInt(document.getElementById('amount').value.replace(/\D/g, ''), 10);
   if(!amount || amount <= 0) return;
   const category = document.getElementById('category').value;
   const date = document.getElementById('date').value;
