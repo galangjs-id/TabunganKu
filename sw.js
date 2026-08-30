@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabunganku-cache';
+const CACHE_NAME = 'tabunganku-cache-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
