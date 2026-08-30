@@ -236,34 +236,99 @@ if ('serviceWorker' in navigator) {
 let deferredInstallPrompt = null;
 const pwaBanner = document.getElementById('pwaBanner');
 const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-const pwaCloseBtn = document.getElementById('pwaCloseBtn');
 const PWA_DISMISS_KEY = 'pwa_banner_dismissed_v1';
+
+let autoDismissTimer = null;
+let dragState = null; // { startX, startY, pointerId }
+
+function startAutoDismiss(){
+  clearTimeout(autoDismissTimer);
+  autoDismissTimer = setTimeout(() => dismissBanner('down'), 3500);
+}
+
+function showBanner(){
+  pwaBanner.classList.add('show', 'entering');
+  pwaBanner.style.transform = '';
+  pwaBanner.style.opacity = '';
+  setTimeout(() => pwaBanner.classList.remove('entering'), 400);
+  startAutoDismiss();
+}
+
+function dismissBanner(direction){
+  clearTimeout(autoDismissTimer);
+  const distance = direction === 'down' ? 'translateY(140%)'
+    : direction === 'left' ? 'translateX(-120%)'
+    : direction === 'right' ? 'translateX(120%)'
+    : 'translateY(140%)';
+  pwaBanner.style.transform = distance;
+  pwaBanner.style.opacity = '0';
+  sessionStorage.setItem(PWA_DISMISS_KEY, '1');
+  setTimeout(() => {
+    pwaBanner.classList.remove('show');
+    pwaBanner.style.transform = '';
+    pwaBanner.style.opacity = '';
+  }, 280);
+}
+
+pwaBanner.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.pwa-banner-install')) return;
+  clearTimeout(autoDismissTimer);
+  pwaBanner.classList.add('dragging');
+  dragState = { startX: e.clientX, startY: e.clientY, pointerId: e.pointerId };
+  pwaBanner.setPointerCapture(e.pointerId);
+});
+
+pwaBanner.addEventListener('pointermove', (e) => {
+  if (!dragState || dragState.pointerId !== e.pointerId) return;
+  const dx = e.clientX - dragState.startX;
+  const dyRaw = e.clientY - dragState.startY;
+  const dy = Math.max(dyRaw, 0); // only allow dragging down, not up
+  pwaBanner.style.transform = `translate(${dx}px, ${dy}px)`;
+  const dist = Math.max(dy, Math.abs(dx));
+  pwaBanner.style.opacity = String(Math.max(1 - dist / 160, 0.25));
+});
+
+function endDrag(e){
+  if (!dragState || dragState.pointerId !== e.pointerId) return;
+  const dx = e.clientX - dragState.startX;
+  const dy = Math.max(e.clientY - dragState.startY, 0);
+  pwaBanner.classList.remove('dragging');
+  dragState = null;
+
+  if (dy > 60) {
+    dismissBanner('down');
+  } else if (Math.abs(dx) > 80) {
+    dismissBanner(dx > 0 ? 'right' : 'left');
+  } else {
+    pwaBanner.style.transform = '';
+    pwaBanner.style.opacity = '';
+    startAutoDismiss();
+  }
+}
+pwaBanner.addEventListener('pointerup', endDrag);
+pwaBanner.addEventListener('pointercancel', endDrag);
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
 
-  // Jangan tampil lagi kalau user udah pernah nutup manual
   if (sessionStorage.getItem(PWA_DISMISS_KEY)) return;
   if (window.matchMedia('(display-mode: standalone)').matches) return;
 
-  pwaBanner.classList.add('show');
+  showBanner();
 });
 
 pwaInstallBtn.addEventListener('click', async () => {
   if (!deferredInstallPrompt) return;
+  clearTimeout(autoDismissTimer);
   pwaBanner.classList.remove('show');
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice;
   deferredInstallPrompt = null;
 });
 
-pwaCloseBtn.addEventListener('click', () => {
-  pwaBanner.classList.remove('show');
-  sessionStorage.setItem(PWA_DISMISS_KEY, '1');
-});
-
 window.addEventListener('appinstalled', () => {
+  clearTimeout(autoDismissTimer);
   pwaBanner.classList.remove('show');
   deferredInstallPrompt = null;
 });

@@ -31,9 +31,6 @@
     <div class="menu-wrap">
       <button class="reset-btn menu-btn" onclick="toggleMenuPopup()" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
       <div class="menu-popup" id="menuPopup">
-        <a class="menu-item" href="https://github.com/galangjs-id/TabunganKu/releases/latest" target="_blank" rel="noopener">
-          <i class="fa-solid fa-download"></i> Download App
-        </a>
         <button class="menu-item danger" onclick="closeMenuPopup(); openResetSheet();">
           <i class="fa-solid fa-arrow-rotate-left"></i> Reset Data
         </button>
@@ -148,13 +145,12 @@
   </div>
   <div class="pwa-banner-info">
     <div class="pwa-banner-title">Install TabunganKu App</div>
-    <div class="pwa-banner-sub">Cepat, ringan & offline-ready</div>
+    <div class="pwa-banner-sub-wrap">
+      <div class="pwa-banner-sub">Cepat, ringan & offline-ready</div>
+    </div>
   </div>
   <button class="pwa-banner-install" id="pwaInstallBtn">
     <i class="fa-solid fa-arrow-down-to-line"></i> Install
-  </button>
-  <button class="pwa-banner-close" id="pwaCloseBtn" title="Tutup">
-    <i class="fa-solid fa-xmark"></i>
   </button>
 </div>
 
