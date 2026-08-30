@@ -1,0 +1,25 @@
+{
+  "name": "TabunganKu - Pencatatan Keuangan",
+  "short_name": "TabunganKu",
+  "description": "Aplikasi pencatatan pemasukan & pengeluaran harian",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#14171a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
