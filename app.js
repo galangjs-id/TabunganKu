@@ -224,15 +224,6 @@ load();
 populateMonths();
 render();
 
-// Splash screen: tampil bentar aja lalu hilang
-setTimeout(() => {
-  const splash = document.getElementById('splashScreen');
-  if(splash){
-    splash.classList.add('splash-hide');
-    setTimeout(() => splash.remove(), 350);
-  }
-}, 700);
-
 // ============================= //
 // PWA: service worker + custom install banner
 // ============================= //
