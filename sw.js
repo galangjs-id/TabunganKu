@@ -2,8 +2,6 @@ const CACHE_NAME = 'tabunganku-cache-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
   './manifest.json',
   './icons/icon.png'
 ];
@@ -25,6 +23,26 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const isHTML = event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    event.request.url.endsWith('/index.html') ||
+    event.request.url.endsWith('/');
+
+  if (isHTML) {
+    // Network-first: selalu coba ambil versi terbaru dulu biar update langsung kepakai
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first untuk asset statis (icon, dll)
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return (
