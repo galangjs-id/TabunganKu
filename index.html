@@ -139,8 +139,8 @@ body{
 
 /* Summary */
 .summary{
-  display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:14px;
-  margin-bottom:26px;
+  display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:10px;
+  margin-bottom:10px;
 }
 @media (max-width:640px){ .summary{grid-template-columns:1fr;} }
 .card{
@@ -156,11 +156,20 @@ body{
   position:relative;
   overflow:hidden;
 }
+.card-balance::before{
+  content:"";
+  position:absolute; right:20px; top:-40px;
+  width:110px; height:110px; border-radius:50%;
+  background:var(--income);
+  opacity:.35;
+  filter:blur(30px);
+}
 .card-balance::after{
   content:"";
-  position:absolute; right:-30px; top:-30px;
-  width:140px; height:140px; border-radius:50%;
-  background:linear-gradient(135deg, rgba(15,157,88,.35), rgba(217,48,37,.35));
+  position:absolute; right:-40px; top:10px;
+  width:110px; height:110px; border-radius:50%;
+  background:var(--expense);
+  opacity:.35;
   filter:blur(30px);
 }
 .card-label{
@@ -231,20 +240,20 @@ body{
 .txn-del{
   border:none; background:transparent; cursor:pointer;
   color:var(--text-faint); font-size:15px; padding:6px 8px;
-  border-radius:999px; opacity:0; transition:opacity .12s ease, background .12s ease, color .12s ease;
+  border-radius:999px; opacity:0; pointer-events:none; transition:opacity .12s ease, background .12s ease, color .12s ease;
 }
-.txn:hover .txn-del{opacity:1;}
+.txn.active .txn-del{opacity:1; pointer-events:auto;}
 .txn-del:hover{background:var(--surface-2); color:var(--expense);}
 .txn-edit{
   border:none; background:transparent; cursor:pointer;
   color:var(--text-faint); font-size:14px; padding:6px 8px;
-  border-radius:999px; opacity:0; transition:opacity .12s ease, background .12s ease, color .12s ease;
+  border-radius:999px; opacity:0; pointer-events:none; transition:opacity .12s ease, background .12s ease, color .12s ease;
 }
-.txn:hover .txn-edit{opacity:1;}
+.txn.active .txn-edit{opacity:1; pointer-events:auto;}
 .txn-edit:hover{background:var(--surface-2); color:var(--text);}
 
 /* Goal card */
-.goal-card{ margin-bottom:26px; }
+.goal-card{ margin-bottom:10px; }
 .goal-empty{
   display:flex; align-items:center; justify-content:center; gap:10px;
   padding:6px 0; cursor:pointer; color:var(--text-faint); font-weight:700; font-size:13.5px;
@@ -270,7 +279,7 @@ body{
 .goal-pct{ font-size:12px; color:var(--text-faint); margin-top:8px; font-weight:600; }
 
 /* Chart card */
-.chart-card{ margin-bottom:26px; }
+.chart-card{ margin-bottom:10px; }
 .chart-legend{ display:flex; gap:16px; margin-top:10px; }
 .chart-legend-item{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-soft); font-weight:600; }
 .chart-legend-dot{ width:9px; height:9px; border-radius:3px; display:inline-block; }
@@ -772,6 +781,16 @@ function deleteTxn(id){
   render();
 }
 
+function toggleTxnActive(el, e){
+  if(e) e.stopPropagation();
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.txn.active').forEach(t => t.classList.remove('active'));
+  if(!wasActive) el.classList.add('active');
+}
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.txn')) document.querySelectorAll('.txn.active').forEach(t => t.classList.remove('active'));
+});
+
 function openGoalSheet(){
   document.getElementById('goalAmount').value = savingsGoal ? savingsGoal.toLocaleString('id-ID') : '';
   document.getElementById('goalOverlay').classList.add('open');
@@ -892,7 +911,7 @@ function render(){
     groups[date].forEach(t => {
       const isIncome = t.type === 'income';
       html += `
-        <div class="txn">
+        <div class="txn" onclick="toggleTxnActive(this, event)">
           <div class="txn-dot ${t.type}"><i class="fa-solid ${catIcon(t.category)}"></i></div>
           <div class="txn-info">
             <div class="txn-cat">${t.category}</div>
@@ -900,8 +919,8 @@ function render(){
           </div>
           <div class="txn-right">
             <div class="txn-amount ${t.type} num">${isIncome ? '+' : '-'}${formatRupiah(t.amount)}</div>
-            <button class="txn-edit" onclick="openSheet('${t.type}','${t.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
-            <button class="txn-del" onclick="deleteTxn('${t.id}')" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="txn-edit" onclick="event.stopPropagation(); openSheet('${t.type}','${t.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+            <button class="txn-del" onclick="event.stopPropagation(); deleteTxn('${t.id}')" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         </div>`;
     });
