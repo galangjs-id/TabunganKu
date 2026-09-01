@@ -280,6 +280,19 @@ body{
 
 /* Chart card */
 .chart-card{ margin-bottom:10px; }
+.chart-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.chart-card-head .card-label{ margin-bottom:0; }
+.chart-toggle-btn{
+  border:none; background:var(--surface-2); width:30px; height:30px; border-radius:9px;
+  cursor:pointer; color:var(--text-soft); font-size:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s ease, color .15s ease;
+}
+.chart-toggle-btn:hover{ background:var(--border); color:var(--text); }
+.chart-toggle-btn i{ transition:transform .2s ease; display:block; }
+.chart-card.collapsed .chart-toggle-btn i{ transform:rotate(-90deg); }
+.chart-card.collapsed .chart-body{ display:none; }
+.chart-card.collapsed .chart-card-head{ margin-bottom:0; }
 .chart-legend{ display:flex; gap:16px; margin-top:10px; }
 .chart-legend-item{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-soft); font-weight:600; }
 .chart-legend-dot{ width:9px; height:9px; border-radius:3px; display:inline-block; }
@@ -513,11 +526,18 @@ body{
   <div class="card goal-card" id="goalCard"></div>
 
   <div class="card chart-card" id="chartCard">
-    <div class="card-label">Grafik Tren Bulanan</div>
-    <div class="chart-scroll"><canvas id="trendChart" height="180"></canvas></div>
-    <div class="chart-legend">
-      <div class="chart-legend-item"><span class="chart-legend-dot income"></span>Pemasukan</div>
-      <div class="chart-legend-item"><span class="chart-legend-dot expense"></span>Pengeluaran</div>
+    <div class="chart-card-head">
+      <div class="card-label">Grafik Tren Bulanan</div>
+      <button class="chart-toggle-btn" id="chartToggleBtn" onclick="toggleChartCollapse()" title="Buka/tutup grafik">
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+    </div>
+    <div class="chart-body" id="chartBody">
+      <div class="chart-scroll"><canvas id="trendChart" height="180"></canvas></div>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><span class="chart-legend-dot income"></span>Pemasukan</div>
+        <div class="chart-legend-item"><span class="chart-legend-dot expense"></span>Pengeluaran</div>
+      </div>
     </div>
   </div>
 
@@ -638,6 +658,7 @@ body{
 const STORAGE_KEY = 'catatan_kas_txns_v1';
 const THEME_KEY = 'theme_v1';
 const GOAL_KEY = 'savings_goal_v1';
+const CHART_COLLAPSE_KEY = 'chart_collapsed_v1';
 const CATEGORIES = {
   income: ['Gaji','Bonus','Usaha','Hadiah','Investasi','Uang Saku','Lainnya'],
   expense: ['Makan','Transport','Belanja','Tagihan','Hiburan','Kesehatan','Lainnya']
@@ -1061,6 +1082,21 @@ function renderChart(){
 }
 window.addEventListener('resize', () => { if(document.getElementById('trendChart')) renderChart(); });
 
+// ============================= //
+// Chart card: expand/collapse + simpan state ke localStorage
+// ============================= //
+function applyChartCollapse(collapsed){
+  const card = document.getElementById('chartCard');
+  if(!card) return;
+  card.classList.toggle('collapsed', collapsed);
+  if(!collapsed) renderChart();
+}
+function toggleChartCollapse(){
+  const collapsed = !document.getElementById('chartCard').classList.contains('collapsed');
+  localStorage.setItem(CHART_COLLAPSE_KEY, collapsed ? '1' : '0');
+  applyChartCollapse(collapsed);
+}
+
 function escapeHtml(s){
   const div = document.createElement('div');
   div.textContent = s;
@@ -1098,6 +1134,7 @@ load();
 loadGoal();
 populateMonths();
 render();
+applyChartCollapse(localStorage.getItem(CHART_COLLAPSE_KEY) === '1');
 
 // ============================= //
 // PWA: service worker + custom install banner
