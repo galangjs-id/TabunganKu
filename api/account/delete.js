@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
 
     let result;
     try {
-      result = await get(pathname, { access: 'private' });
+      result = await get(pathname, { access: 'private', useCache: false });
     } catch (err) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }

@@ -13,7 +13,7 @@ function genUid(len = 8) {
 
 async function uidExists(uid) {
   try {
-    await get(`users/${uid}.json`, { access: 'private' });
+    await get(`users/${uid}.json`, { access: 'private', useCache: false });
     return true;
   } catch (err) {
     return false; // gak ketemu / error lain -> anggap belum dipakai

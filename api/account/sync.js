@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
 
     // Pastikan akunnya beneran ada sebelum ditimpa
     try {
-      await get(`users/${uid}.json`, { access: 'private' });
+      await get(`users/${uid}.json`, { access: 'private', useCache: false });
     } catch (err) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }

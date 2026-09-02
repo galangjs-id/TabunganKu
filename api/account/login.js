@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
 
     let result;
     try {
-      result = await get(`users/${uid.trim()}.json`, { access: 'private' });
+      result = await get(`users/${uid.trim()}.json`, { access: 'private', useCache: false });
     } catch (err) {
       return res.status(404).json({ error: 'ID tidak ditemukan' });
     }
