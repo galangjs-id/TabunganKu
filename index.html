@@ -706,8 +706,24 @@ body{
         </div>
       </div>
       <p style="font-size:12px; color:var(--text-faint); margin:14px 0; line-height:1.5;">Data kamu otomatis kesimpen ke server tiap ada perubahan, jadi aman meski histori/cache browser dihapus. <b>Jangan share ID ini ke siapa pun</b> — siapa aja yang tau nama & ID kamu bisa login ke akun ini.</p>
-      <button type="button" class="reset-confirm-btn" style="background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="logoutAccount()">Keluar dari Akun</button>
+      <button type="button" class="reset-confirm-btn" style="background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="openLogoutConfirm()">Keluar dari Akun</button>
       <button type="button" class="reset-confirm-btn" style="margin-top:8px;" onclick="openDeleteConfirm()">Hapus Akun</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="logoutConfirmOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title"><i class="fa-solid fa-right-from-bracket"></i>&nbsp; Keluar dari Akun</div>
+      <button class="close-btn" onclick="closeLogoutConfirm()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 20px;">
+      Data di HP ini tetap ada, tapi gak akan sinkron lagi ke server sampai kamu login ulang.
+    </p>
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeLogoutConfirm()">Batal</button>
+      <button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text);" onclick="confirmLogoutAccount()">Keluar</button>
     </div>
   </div>
 </div>
@@ -1356,9 +1372,18 @@ async function submitLoginAccount(e){
   }
 }
 
-function logoutAccount(){
-  if(!confirm('Keluar dari akun? Data di HP ini tetap ada, tapi gak akan sinkron lagi sampai login ulang.')) return;
+function openLogoutConfirm(){
+  document.getElementById('logoutConfirmOverlay').classList.add('open');
+}
+function closeLogoutConfirm(){
+  document.getElementById('logoutConfirmOverlay').classList.remove('open');
+}
+document.getElementById('logoutConfirmOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'logoutConfirmOverlay') closeLogoutConfirm();
+});
+function confirmLogoutAccount(){
   saveAccountSession(null);
+  closeLogoutConfirm();
   closeAccountSheet();
 }
 
