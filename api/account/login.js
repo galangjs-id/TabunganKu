@@ -10,10 +10,8 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Nama dan ID wajib diisi' });
     }
 
-    let result;
-    try {
-      result = await get(`users/${uid.trim()}.json`, { access: 'private', useCache: false });
-    } catch (err) {
+    const result = await get(`users/${uid.trim()}.json`, { access: 'private', useCache: false });
+    if (!result) {
       return res.status(404).json({ error: 'ID tidak ditemukan' });
     }
 

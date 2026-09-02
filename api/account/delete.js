@@ -12,10 +12,8 @@ module.exports = async function handler(req, res) {
 
     const pathname = `users/${uid.trim()}.json`;
 
-    let result;
-    try {
-      result = await get(pathname, { access: 'private', useCache: false });
-    } catch (err) {
+    const result = await get(pathname, { access: 'private', useCache: false });
+    if (!result) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }
 

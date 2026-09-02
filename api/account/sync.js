@@ -11,9 +11,8 @@ module.exports = async function handler(req, res) {
     }
 
     // Pastikan akunnya beneran ada sebelum ditimpa
-    try {
-      await get(`users/${uid}.json`, { access: 'private', useCache: false });
-    } catch (err) {
+    const existing = await get(`users/${uid}.json`, { access: 'private', useCache: false });
+    if (!existing) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }
 
