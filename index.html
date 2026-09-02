@@ -1351,6 +1351,11 @@ async function submitLoginAccount(e){
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true; btn.textContent = 'Masuk...';
   try{
+    // Simpen dulu kegiatan yang udah kecatet di HP ini (sebagai guest/belum login),
+    // sebelum ketimpa data yang ditarik dari akun tujuan
+    const localTxns = Array.isArray(txns) ? txns.slice() : [];
+    const localGoal = savingsGoal;
+
     const res = await fetch('/api/account/login', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ name, uid })
@@ -1358,10 +1363,34 @@ async function submitLoginAccount(e){
     const data = await res.json();
     if(!res.ok) throw new Error(data.error || 'Gagal login');
     saveAccountSession({ uid: data.uid, name: data.name });
-    txns = Array.isArray(data.txns) ? data.txns : [];
-    savingsGoal = typeof data.goal === 'number' ? data.goal : 0;
+
+    const serverTxns = Array.isArray(data.txns) ? data.txns : [];
+    const serverGoal = typeof data.goal === 'number' ? data.goal : 0;
+
+    // Gabungkan kegiatan lokal (yang tadinya cuma di localStorage) ke data akun,
+    // biar gak hilang begitu login ke akun yang sudah ada — dedupe pakai id
+    const existingIds = new Set(serverTxns.map(t => t.id));
+    const mergedTxns = serverTxns.slice();
+    let hasLocalOnlyData = false;
+    localTxns.forEach(t => {
+      if(!existingIds.has(t.id)){
+        mergedTxns.push(t);
+        existingIds.add(t.id);
+        hasLocalOnlyData = true;
+      }
+    });
+    const mergedGoal = serverGoal > 0 ? serverGoal : localGoal;
+    if(mergedGoal !== serverGoal) hasLocalOnlyData = true;
+
+    txns = mergedTxns;
+    savingsGoal = mergedGoal;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(txns));
     localStorage.setItem(GOAL_KEY, String(savingsGoal));
+
+    // Kalau ada kegiatan lokal yang belum pernah nyampe server, langsung push
+    // supaya dari sini penyimpanan aslinya lewat ID/akun, localStorage cuma cache
+    if(hasLocalOnlyData) await syncToServer(true);
+
     populateMonths();
     render();
     closeAccountSheet();
