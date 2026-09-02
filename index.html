@@ -707,7 +707,24 @@ body{
       </div>
       <p style="font-size:12px; color:var(--text-faint); margin:14px 0; line-height:1.5;">Data kamu otomatis kesimpen ke server tiap ada perubahan, jadi aman meski histori/cache browser dihapus. <b>Jangan share ID ini ke siapa pun</b> — siapa aja yang tau nama & ID kamu bisa login ke akun ini.</p>
       <button type="button" class="reset-confirm-btn" style="background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="logoutAccount()">Keluar dari Akun</button>
-      <button type="button" class="reset-confirm-btn" style="margin-top:8px;" onclick="deleteAccount()">Hapus Akun</button>
+      <button type="button" class="reset-confirm-btn" style="margin-top:8px;" onclick="openDeleteConfirm()">Hapus Akun</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="deleteConfirmOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title" style="color:var(--expense);"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp; Hapus Akun</div>
+      <button class="close-btn" onclick="closeDeleteConfirm()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 20px;">
+      Akun <b id="deleteConfirmName" style="color:var(--text);"></b> (ID: <b id="deleteConfirmUid" class="num" style="color:var(--text);"></b>) beserta semua data tabungannya bakal dihapus <b style="color:var(--expense);">permanen</b> dari server. Tindakan ini gak bisa dibatalin.
+    </p>
+    <div id="deleteConfirmError" style="display:none; font-size:12.5px; color:var(--expense); margin-bottom:14px; font-weight:600;"></div>
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeDeleteConfirm()">Batal</button>
+      <button type="button" class="reset-confirm-btn" style="flex:1;" id="deleteConfirmBtn" onclick="confirmDeleteAccount()">Hapus</button>
     </div>
   </div>
 </div>
@@ -1345,15 +1362,26 @@ function logoutAccount(){
   closeAccountSheet();
 }
 
-async function deleteAccount(){
+function openDeleteConfirm(){
   if(!account) return;
-  const sure = confirm(
-    'HAPUS AKUN "' + account.name + '" (ID: ' + account.uid + ')?\n\n' +
-    'Semua data tabungan di akun ini bakal dihapus PERMANEN dari server dan TIDAK BISA dikembalikan lagi.\n\n' +
-    'Yakin mau lanjut?'
-  );
-  if(!sure) return;
+  document.getElementById('deleteConfirmName').textContent = account.name;
+  document.getElementById('deleteConfirmUid').textContent = account.uid;
+  document.getElementById('deleteConfirmError').style.display = 'none';
+  document.getElementById('deleteConfirmOverlay').classList.add('open');
+}
+function closeDeleteConfirm(){
+  document.getElementById('deleteConfirmOverlay').classList.remove('open');
+}
+document.getElementById('deleteConfirmOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'deleteConfirmOverlay') closeDeleteConfirm();
+});
 
+async function confirmDeleteAccount(){
+  if(!account) return;
+  const btn = document.getElementById('deleteConfirmBtn');
+  const errEl = document.getElementById('deleteConfirmError');
+  errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Menghapus...';
   try{
     const res = await fetch('/api/account/delete', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -1369,9 +1397,13 @@ async function deleteAccount(){
     saveAccountSession(null);
     populateMonths();
     render();
+    closeDeleteConfirm();
     closeAccountSheet();
   }catch(err){
-    alert(err.message);
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Hapus';
   }
 }
 
