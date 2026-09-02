@@ -1,4 +1,4 @@
-const { put, list } = require('@vercel/blob');
+const { put, get } = require('@vercel/blob');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -11,8 +11,9 @@ module.exports = async function handler(req, res) {
     }
 
     // Pastikan akunnya beneran ada sebelum ditimpa
-    const found = await list({ prefix: `users/${uid}.json`, limit: 1 });
-    if (!found.blobs.length) {
+    try {
+      await get(`users/${uid}.json`, { access: 'private' });
+    } catch (err) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }
 
@@ -25,7 +26,7 @@ module.exports = async function handler(req, res) {
     };
 
     await put(`users/${uid}.json`, JSON.stringify(data), {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: 'application/json',

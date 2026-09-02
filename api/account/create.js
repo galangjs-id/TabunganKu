@@ -1,4 +1,4 @@
-const { put, list } = require('@vercel/blob');
+const { put, get } = require('@vercel/blob');
 
 // Hindari karakter yang gampang ketuker (0/O, 1/I/l) biar enak diketik ulang
 const UID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -9,6 +9,15 @@ function genUid(len = 8) {
     out += UID_CHARS[Math.floor(Math.random() * UID_CHARS.length)];
   }
   return out;
+}
+
+async function uidExists(uid) {
+  try {
+    await get(`users/${uid}.json`, { access: 'private' });
+    return true;
+  } catch (err) {
+    return false; // gak ketemu / error lain -> anggap belum dipakai
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -23,14 +32,11 @@ module.exports = async function handler(req, res) {
 
     // Pastikan UID belum dipakai (super kecil kemungkinan collision, tapi dicek biar aman)
     let uid;
-    let exists = true;
     let tries = 0;
-    while (exists && tries < 5) {
+    do {
       uid = genUid();
-      const found = await list({ prefix: `users/${uid}.json`, limit: 1 });
-      exists = found.blobs.length > 0;
       tries++;
-    }
+    } while (tries < 5 && (await uidExists(uid)));
 
     const data = {
       uid,
@@ -41,7 +47,7 @@ module.exports = async function handler(req, res) {
     };
 
     await put(`users/${uid}.json`, JSON.stringify(data), {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType: 'application/json',

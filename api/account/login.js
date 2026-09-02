@@ -1,4 +1,4 @@
-const { list } = require('@vercel/blob');
+const { get } = require('@vercel/blob');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,16 +10,15 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Nama dan ID wajib diisi' });
     }
 
-    const found = await list({ prefix: `users/${uid.trim()}.json`, limit: 1 });
-    if (!found.blobs.length) {
+    let result;
+    try {
+      result = await get(`users/${uid.trim()}.json`, { access: 'private' });
+    } catch (err) {
       return res.status(404).json({ error: 'ID tidak ditemukan' });
     }
 
-    const fileRes = await fetch(found.blobs[0].url);
-    if (!fileRes.ok) {
-      return res.status(500).json({ error: 'Gagal mengambil data akun' });
-    }
-    const data = await fileRes.json();
+    const text = await new Response(result.stream).text();
+    const data = JSON.parse(text);
 
     // Nama harus cocok sebagai lapisan pengecekan tambahan (bukan password sungguhan)
     if (String(data.name).trim().toLowerCase() !== String(name).trim().toLowerCase()) {
