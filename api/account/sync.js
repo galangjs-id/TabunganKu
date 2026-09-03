@@ -21,6 +21,7 @@ module.exports = async function handler(req, res) {
       name,
       txns: Array.isArray(txns) ? txns : [],
       goal: typeof goal === 'number' ? goal : 0,
+      sessionActive: true,
       updatedAt: new Date().toISOString(),
     };
 

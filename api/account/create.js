@@ -39,6 +39,7 @@ module.exports = async function handler(req, res) {
       name: name.trim(),
       txns: [],
       goal: 0,
+      sessionActive: true, // device yang bikin akun otomatis jadi sesi aktif
       updatedAt: new Date().toISOString(),
     };
 
@@ -49,7 +50,7 @@ module.exports = async function handler(req, res) {
       contentType: 'application/json',
     });
 
-    return res.status(200).json({ uid, name: data.name });
+    return res.status(200).json(data);
   } catch (err) {
     console.error('create account error:', err);
     return res.status(500).json({ error: 'Gagal membuat akun' });
