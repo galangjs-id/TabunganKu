@@ -16,6 +16,14 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }
 
+    const existingText = await new Response(existing.stream).text();
+    const existingData = JSON.parse(existingText);
+
+    // Nama harus cocok, sama kayak login/delete — biar UID doang nggak cukup buat nimpa data orang
+    if (String(existingData.name).trim().toLowerCase() !== String(name).trim().toLowerCase()) {
+      return res.status(403).json({ error: 'Nama tidak cocok dengan ID ini' });
+    }
+
     const data = {
       uid,
       name,

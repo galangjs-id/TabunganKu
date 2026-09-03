@@ -16,6 +16,17 @@ async function uidExists(uid) {
   return result !== null;
 }
 
+// Satu nama cuma boleh dipakai satu akun. Disimpen sebagai index terpisah
+// (names/{nama-dinormalisasi}.json) biar cek-nya cepet, gak perlu scan semua user.
+function nameKey(name) {
+  return `names/${encodeURIComponent(name.trim().toLowerCase())}.json`;
+}
+
+async function nameTaken(name) {
+  const result = await get(nameKey(name), { access: 'private', useCache: false });
+  return result !== null;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -24,6 +35,10 @@ module.exports = async function handler(req, res) {
     const { name } = req.body || {};
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ error: 'Nama wajib diisi' });
+    }
+
+    if (await nameTaken(name)) {
+      return res.status(409).json({ error: 'Nama telah digunakan', code: 'NAME_TAKEN' });
     }
 
     // Pastikan UID belum dipakai (super kecil kemungkinan collision, tapi dicek biar aman)
@@ -47,6 +62,14 @@ module.exports = async function handler(req, res) {
       access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
+      contentType: 'application/json',
+    });
+
+    // Kunci nama ini biar gak bisa dipakai akun lain
+    await put(nameKey(name), JSON.stringify({ uid }), {
+      access: 'private',
+      addRandomSuffix: false,
+      allowOverwrite: false,
       contentType: 'application/json',
     });
 
