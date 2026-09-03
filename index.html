@@ -426,6 +426,21 @@ body{
 .reset-option input{ accent-color:var(--expense); width:16px; height:16px; }
 .reset-option-text b{ display:block; font-size:14px; }
 .reset-option-text span{ font-size:12px; color:var(--text-faint); }
+.account-info-box{
+  display:flex; align-items:center; gap:12px;
+  padding:13px 14px; border-radius:14px;
+  border:1px solid var(--border); background:var(--surface);
+  text-align:left; font-family:inherit;
+}
+.uid-spoiler{
+  cursor:pointer; border-radius:4px; padding:0 2px;
+  background:var(--elevated); color:transparent;
+  text-shadow:0 0 8px rgba(255,255,255,.5);
+  transition:background .15s, color .15s, text-shadow .15s;
+}
+.uid-spoiler.revealed{
+  background:transparent; color:inherit; text-shadow:none;
+}
 .reset-confirm-btn{
   width:100%; border:none; padding:14px; border-radius:12px;
   font-family:inherit; font-weight:800; font-size:14.5px; color:#fff;
@@ -703,7 +718,7 @@ body{
     </div>
 
     <div id="accountLoggedIn" style="display:none;">
-      <div class="reset-option" style="cursor:default;">
+      <div class="account-info-box">
         <div style="position:relative; flex-shrink:0;">
           <div class="txn-dot" id="accountAvatarDot" style="color:#fff;"><i class="fa-solid fa-user"></i></div>
           <button type="button" onclick="openAvatarColorPicker()" title="Ubah warna profil" style="position:absolute; bottom:-4px; right:-4px; width:20px; height:20px; border-radius:50%; background:var(--surface); border:2px solid var(--elevated); display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; color:var(--text-soft); font-size:9px;">
@@ -712,7 +727,7 @@ body{
         </div>
         <div class="reset-option-text">
           <b id="accountNameDisplay"></b>
-          <span>ID: <span id="accountUidDisplay" class="num"></span> <i class="fa-regular fa-copy" style="cursor:pointer;" onclick="copyAccountUid()" title="Salin ID"></i></span>
+          <span>ID: <span id="accountUidDisplay" class="num uid-spoiler" onclick="toggleUidSpoiler(this)" title="Ketuk buat lihat ID"></span> <i class="fa-regular fa-copy" style="cursor:pointer;" onclick="copyAccountUid()" title="Salin ID"></i></span>
         </div>
       </div>
       <p style="font-size:12px; color:var(--text-faint); margin:14px 0; line-height:1.5;">Data kamu otomatis kesimpen ke server tiap ada perubahan, jadi aman meski histori/cache browser dihapus. <b>Jangan share ID ini ke siapa pun</b> — siapa aja yang tau nama & ID kamu bisa login ke akun ini.</p>
@@ -1418,6 +1433,7 @@ function chooseAvatarColor(color){
 function openAccountSheet(){
   document.getElementById('accountFormError').style.display = 'none';
   setAuthTab('create');
+  document.getElementById('accountUidDisplay').classList.remove('revealed');
   document.getElementById('accountOverlay').classList.add('open');
 }
 function closeAccountSheet(){
@@ -1603,6 +1619,10 @@ async function confirmDeleteAccount(){
 function copyAccountUid(){
   if(!account) return;
   navigator.clipboard?.writeText(account.uid);
+}
+
+function toggleUidSpoiler(el){
+  el.classList.toggle('revealed');
 }
 
 function syncToServer(immediate){
