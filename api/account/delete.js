@@ -26,7 +26,6 @@ module.exports = async function handler(req, res) {
     }
 
     await del(pathname);
-    await del(`names/${encodeURIComponent(String(data.name).trim().toLowerCase())}.json`);
 
     return res.status(200).json({ ok: true });
   } catch (err) {

@@ -1,4 +1,4 @@
-const { put, get } = require('@vercel/blob');
+const { put, get, list } = require('@vercel/blob');
 
 // Hindari karakter yang gampang ketuker (0/O, 1/I/l) biar enak diketik ulang
 const UID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -16,15 +16,20 @@ async function uidExists(uid) {
   return result !== null;
 }
 
-// Satu nama cuma boleh dipakai satu akun. Disimpen sebagai index terpisah
-// (names/{nama-dinormalisasi}.json) biar cek-nya cepet, gak perlu scan semua user.
-function nameKey(name) {
-  return `names/${encodeURIComponent(name.trim().toLowerCase())}.json`;
-}
-
+// Satu nama cuma boleh dipakai satu akun. Field "name" udah ada di tiap
+// users/*.json, jadi tinggal list semua user terus dicocokin — gak perlu index
+// terpisah, otomatis kepakai buat akun lama juga.
 async function nameTaken(name) {
-  const result = await get(nameKey(name), { access: 'private', useCache: false });
-  return result !== null;
+  const target = name.trim().toLowerCase();
+  const { blobs } = await list({ prefix: 'users/', access: 'private' });
+  for (const blob of blobs) {
+    const result = await get(blob.pathname, { access: 'private', useCache: false });
+    if (!result) continue;
+    const text = await new Response(result.stream).text();
+    const data = JSON.parse(text);
+    if (String(data.name).trim().toLowerCase() === target) return true;
+  }
+  return false;
 }
 
 module.exports = async function handler(req, res) {
@@ -62,14 +67,6 @@ module.exports = async function handler(req, res) {
       access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
-      contentType: 'application/json',
-    });
-
-    // Kunci nama ini biar gak bisa dipakai akun lain
-    await put(nameKey(name), JSON.stringify({ uid }), {
-      access: 'private',
-      addRandomSuffix: false,
-      allowOverwrite: false,
       contentType: 'application/json',
     });
 
