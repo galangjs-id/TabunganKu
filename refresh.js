@@ -1,4 +1,4 @@
-const { get } = require('@vercel/blob');
+const { get, put } = require('@vercel/blob');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Sesi tidak valid' });
     }
 
-    const result = await get(`users/${uid.trim()}.json`, { access: 'private', useCache: false });
+    const pathname = `users/${uid.trim()}.json`;
+    const result = await get(pathname, { access: 'private', useCache: false });
     if (!result) {
       return res.status(404).json({ error: 'Akun tidak ditemukan' });
     }
@@ -22,8 +23,18 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'Sesi tidak valid' });
     }
 
-    // Endpoint ini sengaja TIDAK cek/ubah sessionActive — cuma buat device yang
-    // udah pegang sesi narik data terbaru pas buka app, bukan buat login baru.
+    // Device ini udah lolos cek nama+ID (berarti emang pegang kredensial akun ini),
+    // jadi sekalian "klaim ulang" sessionActive tiap refresh. Ini juga otomatis
+    // nge-migrasi akun lama yang filenya belum pernah punya field sessionActive.
+    data.sessionActive = true;
+    data.updatedAt = new Date().toISOString();
+    await put(pathname, JSON.stringify(data), {
+      access: 'private',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: 'application/json',
+    });
+
     return res.status(200).json(data);
   } catch (err) {
     console.error('refresh account error:', err);
