@@ -522,6 +522,9 @@ body{
         <button class="menu-item danger" onclick="closeMenuPopup(); openResetSheet();">
           <i class="fa-solid fa-arrow-rotate-left"></i> Reset Data
         </button>
+        <a class="menu-item" href="https://t.me/lanzzx1" target="_blank" rel="noopener noreferrer" onclick="closeMenuPopup()">
+          <i class="fa-brands fa-telegram"></i> Developer
+        </a>
       </div>
     </div>
   </div>
@@ -742,6 +745,22 @@ body{
       <button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeDeleteConfirm()">Batal</button>
       <button type="button" class="reset-confirm-btn" style="flex:1;" id="deleteConfirmBtn" onclick="confirmDeleteAccount()">Hapus</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="sessionWarningOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title" style="color:var(--expense);"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp; Akun Sedang Digunakan</div>
+      <button class="close-btn" onclick="closeSessionWarning()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 6px;">
+      Akun ini lagi aktif login di perangkat lain. Satu akun cuma bisa dipakai di satu perangkat dalam satu waktu — logout dulu di perangkat sebelumnya sebelum login lagi di sini.
+    </p>
+    <p style="font-size:12px; color:var(--text-faint); margin:0 0 20px;">
+      Tidak bisa login? Hubungi developer.
+    </p>
+    <button type="button" class="reset-confirm-btn" style="background:var(--text); color:var(--bg);" onclick="closeSessionWarning()">Oke</button>
   </div>
 </div>
 
@@ -1361,7 +1380,13 @@ async function submitLoginAccount(e){
       body: JSON.stringify({ name, uid })
     });
     const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'Gagal login');
+    if(!res.ok){
+      if(data.code === 'SESSION_ACTIVE'){
+        openSessionWarning();
+        return;
+      }
+      throw new Error(data.error || 'Gagal login');
+    }
     saveAccountSession({ uid: data.uid, name: data.name });
 
     const serverTxns = Array.isArray(data.txns) ? data.txns : [];
@@ -1411,10 +1436,27 @@ document.getElementById('logoutConfirmOverlay').addEventListener('click', (e) =>
   if(e.target.id === 'logoutConfirmOverlay') closeLogoutConfirm();
 });
 function confirmLogoutAccount(){
+  const acc = account;
   saveAccountSession(null);
   closeLogoutConfirm();
   closeAccountSheet();
+  if(acc){
+    fetch('/api/account/logout', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name: acc.name, uid: acc.uid })
+    }).catch(err => console.error('Logout server gagal:', err));
+  }
 }
+
+function openSessionWarning(){
+  document.getElementById('sessionWarningOverlay').classList.add('open');
+}
+function closeSessionWarning(){
+  document.getElementById('sessionWarningOverlay').classList.remove('open');
+}
+document.getElementById('sessionWarningOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'sessionWarningOverlay') closeSessionWarning();
+});
 
 function openDeleteConfirm(){
   if(!account) return;
@@ -1494,7 +1536,7 @@ updateAccountUI();
 // Kalau lagi login, tarik data terbaru dari server (biar sinkron antar device
 // & tetap aman meski localStorage di HP ini kehapus)
 if(account){
-  fetch('/api/account/login', {
+  fetch('/api/account/refresh', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ name: account.name, uid: account.uid })
   })
