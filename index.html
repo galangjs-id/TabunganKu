@@ -433,13 +433,13 @@ body{
   text-align:left; font-family:inherit;
 }
 .uid-spoiler{
-  cursor:pointer; border-radius:4px; padding:0 2px;
-  background:var(--elevated); color:transparent;
-  text-shadow:0 0 8px rgba(255,255,255,.5);
-  transition:background .15s, color .15s, text-shadow .15s;
+  cursor:pointer; border-radius:4px; padding:1px 6px;
+  background:var(--text-faint); color:var(--text-faint);
+  letter-spacing:2px; user-select:none;
 }
 .uid-spoiler.revealed{
-  background:transparent; color:inherit; text-shadow:none;
+  background:transparent; color:inherit; letter-spacing:normal;
+  padding:0; user-select:text;
 }
 .reset-confirm-btn{
   width:100%; border:none; padding:14px; border-radius:12px;
@@ -1386,7 +1386,10 @@ function updateAccountUI(){
     if(loggedOut) loggedOut.style.display = 'none';
     if(loggedIn) loggedIn.style.display = 'block';
     document.getElementById('accountNameDisplay').textContent = account.name;
-    document.getElementById('accountUidDisplay').textContent = account.uid;
+    const uidEl = document.getElementById('accountUidDisplay');
+    uidEl.dataset.uid = account.uid;
+    uidEl.classList.remove('revealed');
+    uidEl.textContent = '•'.repeat(account.uid.length);
     applyAvatarColor();
   } else {
     if(state) state.textContent = 'Belum Login';
@@ -1433,7 +1436,9 @@ function chooseAvatarColor(color){
 function openAccountSheet(){
   document.getElementById('accountFormError').style.display = 'none';
   setAuthTab('create');
-  document.getElementById('accountUidDisplay').classList.remove('revealed');
+  const uidEl = document.getElementById('accountUidDisplay');
+  uidEl.classList.remove('revealed');
+  if(uidEl.dataset.uid) uidEl.textContent = '•'.repeat(uidEl.dataset.uid.length);
   document.getElementById('accountOverlay').classList.add('open');
 }
 function closeAccountSheet(){
@@ -1622,7 +1627,8 @@ function copyAccountUid(){
 }
 
 function toggleUidSpoiler(el){
-  el.classList.toggle('revealed');
+  const revealed = el.classList.toggle('revealed');
+  el.textContent = revealed ? el.dataset.uid : '•'.repeat(el.dataset.uid.length);
 }
 
 function syncToServer(immediate){
