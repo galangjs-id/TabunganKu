@@ -512,6 +512,24 @@ body{
 @media (max-width:380px){
   .pwa-banner-sub-wrap{ display:none; }
 }
+
+/* Layar besar: banner instalasi diperbesar dikit biar gak keliatan kecil & sepi, tetep flat/minimalis */
+@media (min-width:820px){
+  .pwa-banner{
+    max-width:640px;
+    padding:18px 20px;
+    border-radius:22px;
+    gap:16px;
+  }
+  .pwa-banner-icon{
+    width:60px; height:60px; border-radius:16px;
+  }
+  .pwa-banner-title{ font-size:17px; }
+  .pwa-banner-sub{ font-size:13.5px; }
+  .pwa-banner-install{
+    font-size:15px; padding:13px 22px;
+  }
+}
 </style>
 </head>
 <body>
