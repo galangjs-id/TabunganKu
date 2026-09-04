@@ -721,7 +721,7 @@ body{
 <div class="overlay" id="installHelpOverlay">
   <div class="sheet">
     <div class="sheet-head">
-      <div class="sheet-title"><i class="fa-brands fa-android"></i>&nbsp; Install App</div>
+      <div class="sheet-title"><i class="fa-brands fa-android"></i>&nbsp; Install TabunganKu</div>
       <button class="close-btn" onclick="closeInstallHelp()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p id="installHelpText" style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 20px;"></p>
@@ -1649,32 +1649,18 @@ window.addEventListener('appinstalled', () => {
   localStorage.setItem(PWA_INSTALLED_KEY, '1');
 });
 
-function installInstructionsHtml(){
-  const ua = navigator.userAgent || '';
-  if(/iPhone|iPad|iPod/i.test(ua)){
-    return 'Buka menu <b>Share</b> (ikon kotak dengan panah ke atas) di Safari, lalu pilih <b>"Add to Home Screen"</b> / "Tambah ke Layar Utama".';
-  }
-  if(/Android/i.test(ua)){
-    return 'Ketuk menu titik-tiga di pojok browser kamu, lalu pilih <b>"Install app"</b> atau "Tambahkan ke layar Utama".';
-  }
-  return 'Buka menu browser kamu (biasanya ikon titik-tiga di pojok), lalu cari opsi <b>"Install"</b> atau "Add to Home Screen".';
-}
-
 function openInstallHelp(){
   const textEl = document.getElementById('installHelpText');
   const btnRow = document.getElementById('installHelpButtons');
 
   if (isInstalled()){
-    textEl.innerHTML = 'Aplikasi sudah terinstall di perangkat kamu 🎉';
+    textEl.innerHTML = 'TabunganKu sudah ada di perangkat kamu.';
     btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
-  } else if (deferredInstallPrompt) {
-    textEl.innerHTML = 'Install TabunganKu ke layar utama HP kamu biar lebih cepat diakses dan bisa dipakai offline.';
+  } else {
+    textEl.innerHTML = 'Install sekarang untuk akses yang lebih cepat.';
     btnRow.innerHTML =
       '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeInstallHelp()">Batal</button>' +
       '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--income);" onclick="confirmInstall()">Install</button>';
-  } else {
-    textEl.innerHTML = installInstructionsHtml();
-    btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
   }
 
   document.getElementById('installHelpOverlay').classList.add('open');
