@@ -447,89 +447,6 @@ body{
   cursor:pointer; background:var(--expense);
 }
 
-/* ============================= */
-/* PWA Install Banner (dark, ala NextTube) — nempel di footer di atas tombol */
-/* ============================= */
-.pwa-banner{
-  position:fixed;
-  left:12px; right:12px;
-  bottom:calc(var(--bottombar-h) + env(safe-area-inset-bottom));
-  z-index:60;
-  max-width:520px;
-  margin:0 auto;
-  display:none;
-  align-items:center;
-  gap:12px;
-  background:#1c1f23;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:18px;
-  padding:12px 12px;
-  box-shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.2);
-  touch-action:pan-x;
-  user-select:none;
-  transition:transform .28s cubic-bezier(.2,.9,.25,1.1), opacity .28s ease;
-}
-.pwa-banner.show{ display:flex; }
-.pwa-banner.entering{
-  animation:pwaBannerIn .38s cubic-bezier(.2,.9,.25,1.1);
-}
-.pwa-banner.dragging{ transition:none; }
-@keyframes pwaBannerIn{
-  from{ opacity:0; transform:translateY(120%); }
-  to{ opacity:1; transform:translateY(0); }
-}
-.pwa-banner-icon{
-  width:44px; height:44px; border-radius:12px;
-  flex-shrink:0; overflow:hidden;
-  background:linear-gradient(155deg, var(--income) 0%, var(--income) 49%, var(--expense) 51%, var(--expense) 100%);
-  display:flex; align-items:center; justify-content:center;
-}
-.pwa-banner-icon img{ width:100%; height:100%; object-fit:cover; display:block; }
-.pwa-banner-info{ flex:1; min-width:0; }
-.pwa-banner-title{
-  color:#fff; font-weight:700; font-size:14px; letter-spacing:-.01em;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-.pwa-banner-sub-wrap{
-  overflow:hidden; margin-top:2px;
-}
-.pwa-banner-sub{
-  color:rgba(255,255,255,.5); font-size:12px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:fit-content;
-}
-.pwa-banner-install{
-  flex-shrink:0;
-  display:flex; align-items:center; gap:7px;
-  border:none; cursor:pointer; font-family:inherit;
-  background:var(--income);
-  color:#fff; font-weight:700; font-size:13.5px;
-  padding:10px 16px; border-radius:999px;
-  transition:background .15s ease, transform .12s ease;
-}
-.pwa-banner-install:active{ transform:scale(.95); }
-.pwa-banner-install:hover{ background:#0c8a4c; }
-
-@media (max-width:380px){
-  .pwa-banner-sub-wrap{ display:none; }
-}
-
-/* Layar besar: banner instalasi diperbesar dikit biar gak keliatan kecil & sepi, tetep flat/minimalis */
-@media (min-width:820px){
-  .pwa-banner{
-    max-width:640px;
-    padding:18px 20px;
-    border-radius:22px;
-    gap:16px;
-  }
-  .pwa-banner-icon{
-    width:60px; height:60px; border-radius:16px;
-  }
-  .pwa-banner-title{ font-size:17px; }
-  .pwa-banner-sub{ font-size:13.5px; }
-  .pwa-banner-install{
-    font-size:15px; padding:13px 22px;
-  }
-}
 </style>
 </head>
 <body>
@@ -554,12 +471,12 @@ body{
           <i class="fa-solid fa-moon" id="darkModeIcon"></i> Mode Gelap
           <span class="toggle-state" id="darkModeState">Off</span>
         </button>
-        <button class="menu-item" onclick="closeMenuPopup(); triggerInstall();">
-          <i class="fa-brands fa-android"></i> Download App
-        </button>
         <a class="menu-item" href="https://t.me/lanzzx1" target="_blank" rel="noopener noreferrer" onclick="closeMenuPopup()">
           <i class="fa-solid fa-headset"></i> Developer
         </a>
+        <button class="menu-item" onclick="closeMenuPopup(); openInstallHelp();">
+          <i class="fa-brands fa-android"></i> Download App
+        </button>
         <button class="menu-item danger" onclick="closeMenuPopup(); openResetSheet();">
           <i class="fa-solid fa-arrow-rotate-left"></i> Reset Data
         </button>
@@ -808,7 +725,7 @@ body{
       <button class="close-btn" onclick="closeInstallHelp()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p id="installHelpText" style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 20px;"></p>
-    <button type="button" class="reset-confirm-btn" style="background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>
+    <div id="installHelpButtons" style="display:flex; gap:10px;"></div>
   </div>
 </div>
 
@@ -826,22 +743,6 @@ body{
     </p>
     <button type="button" class="reset-confirm-btn" style="background:var(--text); color:var(--bg);" onclick="closeSessionWarning()">Oke</button>
   </div>
-</div>
-
-<!-- PWA Install Banner (custom, style ala NextTube) — nempel tepat di atas footer -->
-<div class="pwa-banner" id="pwaBanner">
-  <div class="pwa-banner-icon">
-    <img src="icons/icon.png" alt="TabunganKu">
-  </div>
-  <div class="pwa-banner-info">
-    <div class="pwa-banner-title">Install TabunganKu App</div>
-    <div class="pwa-banner-sub-wrap">
-      <div class="pwa-banner-sub">Cepat, ringan & offline-ready</div>
-    </div>
-  </div>
-  <button class="pwa-banner-install" id="pwaInstallBtn">
-    <i class="fa-solid fa-arrow-down-to-line"></i> Install
-  </button>
 </div>
 
 <script>
@@ -1717,104 +1618,25 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ============================= //
+// Install PWA — cuma lewat menu "Download App", gak ada notif otomatis.
+// Event beforeinstallprompt tetep ditangkap diam-diam biar siap dipakai
+// begitu user pencet menu-nya.
+// ============================= //
 let deferredInstallPrompt = null;
-const pwaBanner = document.getElementById('pwaBanner');
-const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-const PWA_DISMISS_KEY = 'pwa_banner_dismissed_v1';
-
-let autoDismissTimer = null;
-let dragState = null; // { startY, pointerId }
-
-function startAutoDismiss(){
-  clearTimeout(autoDismissTimer);
-  autoDismissTimer = setTimeout(() => dismissBanner(), 8000);
-}
-
-function showBanner(){
-  pwaBanner.classList.add('show', 'entering');
-  pwaBanner.style.transform = '';
-  pwaBanner.style.opacity = '';
-  setTimeout(() => pwaBanner.classList.remove('entering'), 400);
-  startAutoDismiss();
-}
-
-function dismissBanner(){
-  clearTimeout(autoDismissTimer);
-  pwaBanner.style.transform = 'translateY(140%)';
-  pwaBanner.style.opacity = '0';
-  sessionStorage.setItem(PWA_DISMISS_KEY, '1');
-  setTimeout(() => {
-    pwaBanner.classList.remove('show');
-    pwaBanner.style.transform = '';
-    pwaBanner.style.opacity = '';
-  }, 280);
-}
-
-// Drag hanya boleh ke bawah — geser ke samping diabaikan
-pwaBanner.addEventListener('pointerdown', (e) => {
-  if (e.target.closest('.pwa-banner-install')) return;
-  clearTimeout(autoDismissTimer);
-  pwaBanner.classList.add('dragging');
-  dragState = { startY: e.clientY, pointerId: e.pointerId };
-  pwaBanner.setPointerCapture(e.pointerId);
-});
-
-pwaBanner.addEventListener('pointermove', (e) => {
-  if (!dragState || dragState.pointerId !== e.pointerId) return;
-  const dy = Math.max(e.clientY - dragState.startY, 0); // hanya izinkan ke bawah
-  pwaBanner.style.transform = `translateY(${dy}px)`;
-  pwaBanner.style.opacity = String(Math.max(1 - dy / 160, 0.25));
-});
-
-function endDrag(e){
-  if (!dragState || dragState.pointerId !== e.pointerId) return;
-  const dy = Math.max(e.clientY - dragState.startY, 0);
-  pwaBanner.classList.remove('dragging');
-  dragState = null;
-
-  if (dy > 60) {
-    dismissBanner();
-  } else {
-    pwaBanner.style.transform = '';
-    pwaBanner.style.opacity = '';
-    startAutoDismiss();
-  }
-}
-pwaBanner.addEventListener('pointerup', endDrag);
-pwaBanner.addEventListener('pointercancel', endDrag);
-
-let bannerShownThisLoad = false;
 
 function isStandalone(){
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
-function maybeShowBanner(){
-  if (bannerShownThisLoad) return;
-  if (sessionStorage.getItem(PWA_DISMISS_KEY)) return;
-  if (isStandalone()) return;
-  bannerShownThisLoad = true;
-  updateInstallBtnLabel();
-  showBanner();
-}
-
-function updateInstallBtnLabel(){
-  pwaInstallBtn.innerHTML = deferredInstallPrompt
-    ? '<i class="fa-solid fa-arrow-down-to-line"></i> Install'
-    : '<i class="fa-solid fa-circle-info"></i> Cara Install';
-}
-
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  updateInstallBtnLabel();
-  maybeShowBanner();
 });
 
-// Fallback: browser yang gak pernah nge-fire beforeinstallprompt (mis. iOS Safari,
-// atau Chrome yang nunda event-nya) tetep dikasih tau App-nya bisa di-install,
-// maksimal nunggu 10 detik dari halaman kebuka
-setTimeout(maybeShowBanner, 10000);
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+});
 
 function installInstructionsHtml(){
   const ua = navigator.userAgent || '';
@@ -1828,9 +1650,22 @@ function installInstructionsHtml(){
 }
 
 function openInstallHelp(){
-  document.getElementById('installHelpText').innerHTML = isStandalone()
-    ? 'App ini udah keinstall di perangkat kamu 🎉'
-    : installInstructionsHtml();
+  const textEl = document.getElementById('installHelpText');
+  const btnRow = document.getElementById('installHelpButtons');
+
+  if (isStandalone()){
+    textEl.innerHTML = 'App ini udah keinstall di perangkat kamu 🎉';
+    btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
+  } else if (deferredInstallPrompt) {
+    textEl.innerHTML = 'Install TabunganKu ke layar utama HP kamu biar lebih cepat diakses dan bisa dipakai offline.';
+    btnRow.innerHTML =
+      '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeInstallHelp()">Batal</button>' +
+      '<button type="button" class="reset-confirm-btn" style="flex:1;" onclick="confirmInstall()">Install</button>';
+  } else {
+    textEl.innerHTML = installInstructionsHtml();
+    btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
+  }
+
   document.getElementById('installHelpOverlay').classList.add('open');
 }
 function closeInstallHelp(){
@@ -1840,31 +1675,13 @@ document.getElementById('installHelpOverlay').addEventListener('click', (e) => {
   if(e.target.id === 'installHelpOverlay') closeInstallHelp();
 });
 
-// Dipakai baik dari tombol di banner maupun menu "Download App"
-async function triggerInstall(){
-  if (isStandalone()){
-    openInstallHelp();
-    return;
-  }
-  if (deferredInstallPrompt) {
-    clearTimeout(autoDismissTimer);
-    pwaBanner.classList.remove('show');
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    updateInstallBtnLabel();
-  } else {
-    openInstallHelp();
-  }
-}
-
-pwaInstallBtn.addEventListener('click', triggerInstall);
-
-window.addEventListener('appinstalled', () => {
-  clearTimeout(autoDismissTimer);
-  pwaBanner.classList.remove('show');
+async function confirmInstall(){
+  if (!deferredInstallPrompt) { closeInstallHelp(); return; }
+  closeInstallHelp();
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
   deferredInstallPrompt = null;
-});
+}
 </script>
 </body>
 </html>
