@@ -1625,8 +1625,18 @@ if ('serviceWorker' in navigator) {
 // ============================= //
 let deferredInstallPrompt = null;
 
+const PWA_INSTALLED_KEY = 'pwa_installed_v1';
+
 function isStandalone(){
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+// isStandalone() cuma true kalau app-nya lagi dibuka DARI ikon yang keinstall.
+// Kalau user buka dari tab browser biasa (padahal udah pernah install sebelumnya),
+// isStandalone() bakal false terus — makanya dikombinasi sama flag yang disimpen
+// pas event 'appinstalled' kejadian, biar tetep kedeteksi "udah terinstall".
+function isInstalled(){
+  return isStandalone() || localStorage.getItem(PWA_INSTALLED_KEY) === '1';
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -1636,6 +1646,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
+  localStorage.setItem(PWA_INSTALLED_KEY, '1');
 });
 
 function installInstructionsHtml(){
@@ -1653,14 +1664,14 @@ function openInstallHelp(){
   const textEl = document.getElementById('installHelpText');
   const btnRow = document.getElementById('installHelpButtons');
 
-  if (isStandalone()){
-    textEl.innerHTML = 'App ini udah keinstall di perangkat kamu 🎉';
+  if (isInstalled()){
+    textEl.innerHTML = 'Aplikasi sudah terinstall di perangkat kamu 🎉';
     btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
   } else if (deferredInstallPrompt) {
     textEl.innerHTML = 'Install TabunganKu ke layar utama HP kamu biar lebih cepat diakses dan bisa dipakai offline.';
     btnRow.innerHTML =
       '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeInstallHelp()">Batal</button>' +
-      '<button type="button" class="reset-confirm-btn" style="flex:1;" onclick="confirmInstall()">Install</button>';
+      '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--income);" onclick="confirmInstall()">Install</button>';
   } else {
     textEl.innerHTML = installInstructionsHtml();
     btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
@@ -1679,7 +1690,8 @@ async function confirmInstall(){
   if (!deferredInstallPrompt) { closeInstallHelp(); return; }
   closeInstallHelp();
   deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
+  const choice = await deferredInstallPrompt.userChoice;
+  if (choice.outcome === 'accepted') localStorage.setItem(PWA_INSTALLED_KEY, '1');
   deferredInstallPrompt = null;
 }
 </script>
