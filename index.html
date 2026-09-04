@@ -554,6 +554,9 @@ body{
           <i class="fa-solid fa-moon" id="darkModeIcon"></i> Mode Gelap
           <span class="toggle-state" id="darkModeState">Off</span>
         </button>
+        <button class="menu-item" onclick="closeMenuPopup(); triggerInstall();">
+          <i class="fa-brands fa-android"></i> Download App
+        </button>
         <a class="menu-item" href="https://t.me/lanzzx1" target="_blank" rel="noopener noreferrer" onclick="closeMenuPopup()">
           <i class="fa-solid fa-headset"></i> Developer
         </a>
@@ -795,6 +798,17 @@ body{
       <button type="button" class="reset-confirm-btn" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);" onclick="closeDeleteConfirm()">Batal</button>
       <button type="button" class="reset-confirm-btn" style="flex:1;" id="deleteConfirmBtn" onclick="confirmDeleteAccount()">Hapus</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="installHelpOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title"><i class="fa-brands fa-android"></i>&nbsp; Install App</div>
+      <button class="close-btn" onclick="closeInstallHelp()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p id="installHelpText" style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 20px;"></p>
+    <button type="button" class="reset-confirm-btn" style="background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>
   </div>
 </div>
 
@@ -1713,7 +1727,7 @@ let dragState = null; // { startY, pointerId }
 
 function startAutoDismiss(){
   clearTimeout(autoDismissTimer);
-  autoDismissTimer = setTimeout(() => dismissBanner(), 3500);
+  autoDismissTimer = setTimeout(() => dismissBanner(), 8000);
 }
 
 function showBanner(){
@@ -1769,24 +1783,82 @@ function endDrag(e){
 pwaBanner.addEventListener('pointerup', endDrag);
 pwaBanner.addEventListener('pointercancel', endDrag);
 
+let bannerShownThisLoad = false;
+
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function maybeShowBanner(){
+  if (bannerShownThisLoad) return;
+  if (sessionStorage.getItem(PWA_DISMISS_KEY)) return;
+  if (isStandalone()) return;
+  bannerShownThisLoad = true;
+  updateInstallBtnLabel();
+  showBanner();
+}
+
+function updateInstallBtnLabel(){
+  pwaInstallBtn.innerHTML = deferredInstallPrompt
+    ? '<i class="fa-solid fa-arrow-down-to-line"></i> Install'
+    : '<i class="fa-solid fa-circle-info"></i> Cara Install';
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-
-  if (sessionStorage.getItem(PWA_DISMISS_KEY)) return;
-  if (window.matchMedia('(display-mode: standalone)').matches) return;
-
-  showBanner();
+  updateInstallBtnLabel();
+  maybeShowBanner();
 });
 
-pwaInstallBtn.addEventListener('click', async () => {
-  if (!deferredInstallPrompt) return;
-  clearTimeout(autoDismissTimer);
-  pwaBanner.classList.remove('show');
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
+// Fallback: browser yang gak pernah nge-fire beforeinstallprompt (mis. iOS Safari,
+// atau Chrome yang nunda event-nya) tetep dikasih tau App-nya bisa di-install,
+// maksimal nunggu 10 detik dari halaman kebuka
+setTimeout(maybeShowBanner, 10000);
+
+function installInstructionsHtml(){
+  const ua = navigator.userAgent || '';
+  if(/iPhone|iPad|iPod/i.test(ua)){
+    return 'Buka menu <b>Share</b> (ikon kotak dengan panah ke atas) di Safari, lalu pilih <b>"Add to Home Screen"</b> / "Tambah ke Layar Utama".';
+  }
+  if(/Android/i.test(ua)){
+    return 'Ketuk menu titik-tiga di pojok browser kamu, lalu pilih <b>"Install app"</b> atau "Tambahkan ke layar Utama".';
+  }
+  return 'Buka menu browser kamu (biasanya ikon titik-tiga di pojok), lalu cari opsi <b>"Install"</b> atau "Add to Home Screen".';
+}
+
+function openInstallHelp(){
+  document.getElementById('installHelpText').innerHTML = isStandalone()
+    ? 'App ini udah keinstall di perangkat kamu 🎉'
+    : installInstructionsHtml();
+  document.getElementById('installHelpOverlay').classList.add('open');
+}
+function closeInstallHelp(){
+  document.getElementById('installHelpOverlay').classList.remove('open');
+}
+document.getElementById('installHelpOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'installHelpOverlay') closeInstallHelp();
 });
+
+// Dipakai baik dari tombol di banner maupun menu "Download App"
+async function triggerInstall(){
+  if (isStandalone()){
+    openInstallHelp();
+    return;
+  }
+  if (deferredInstallPrompt) {
+    clearTimeout(autoDismissTimer);
+    pwaBanner.classList.remove('show');
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    updateInstallBtnLabel();
+  } else {
+    openInstallHelp();
+  }
+}
+
+pwaInstallBtn.addEventListener('click', triggerInstall);
 
 window.addEventListener('appinstalled', () => {
   clearTimeout(autoDismissTimer);
