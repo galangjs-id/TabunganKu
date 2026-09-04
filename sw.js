@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabunganku-cache-v10';
+const CACHE_NAME = 'tabungaja-cache-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -29,6 +29,15 @@ self.addEventListener('fetch', (event) => {
     event.request.destination === 'document' ||
     event.request.url.endsWith('/index.html') ||
     event.request.url.endsWith('/');
+
+  // msg.json = pesan info/update dari server, jangan pernah di-cache
+  // biar popup selalu ambil isi terbaru tiap kali app dibuka.
+  if (event.request.url.endsWith('/msg.json')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   if (isHTML) {
     // Network-first: selalu coba ambil versi terbaru dulu biar update langsung kepakai

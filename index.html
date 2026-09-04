@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-<title>TabunganKu</title>
+<title>Tabungaja</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#14171a">
@@ -383,6 +383,33 @@ body{
   cursor:pointer; margin-top:4px;
 }
 
+/* Popup pesan/pembaruan dari msg.json — selalu di tengah layar */
+.msg-overlay{
+  position:fixed; inset:0; background:rgba(20,23,26,.4);
+  backdrop-filter:blur(2px);
+  display:none; align-items:center; justify-content:center;
+  z-index:60; padding:20px;
+}
+.msg-overlay.open{ display:flex; }
+.msg-box{
+  position:relative; background:var(--elevated); width:100%; max-width:380px;
+  border-radius:22px; padding:26px 22px 22px;
+  box-shadow:0 -8px 30px rgba(0,0,0,.12);
+  animation:slideUp .22s ease;
+}
+.msg-box-close{
+  position:absolute; top:14px; right:14px;
+  border:none; background:var(--surface); width:30px; height:30px;
+  border-radius:9px; cursor:pointer; font-size:15px; color:var(--text-soft);
+  display:flex; align-items:center; justify-content:center;
+}
+.msg-box-title{
+  font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px;
+  margin-bottom:10px; padding-right:30px;
+}
+.msg-box-title i{ color:var(--income); }
+.msg-box-text{ font-size:13.5px; line-height:1.55; color:var(--text-soft); white-space:pre-line; }
+
 .fab-space{height:0;}
 
 .reset-btn{
@@ -456,7 +483,7 @@ body{
     <div class="brand">
       <div class="brand-mark"><i class="fa-solid fa-wallet"></i></div>
       <div>
-        <div class="brand-name">TabunganKu</div>
+        <div class="brand-name">Tabungaja</div>
         <div class="brand-sub">KELOLA UANGMU</div>
       </div>
     </div>
@@ -718,10 +745,18 @@ body{
   </div>
 </div>
 
+<div class="msg-overlay" id="msgOverlay">
+  <div class="msg-box">
+    <button type="button" class="msg-box-close" onclick="closeMsgPopup()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="msg-box-title"><i class="fa-solid fa-circle-info"></i>&nbsp; Info</div>
+    <div class="msg-box-text" id="msgBoxText"></div>
+  </div>
+</div>
+
 <div class="overlay" id="installHelpOverlay">
   <div class="sheet">
     <div class="sheet-head">
-      <div class="sheet-title"><i class="fa-brands fa-android"></i>&nbsp; Install TabunganKu</div>
+      <div class="sheet-title"><i class="fa-brands fa-android"></i>&nbsp; Install Tabungaja</div>
       <button class="close-btn" onclick="closeInstallHelp()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p id="installHelpText" style="font-size:13.5px; line-height:1.6; color:var(--text-soft); margin:0 0 20px;"></p>
@@ -1610,6 +1645,28 @@ if(account){
 }
 
 // ============================= //
+// Popup pesan info/pembaruan dari msg.json
+// ============================= //
+function closeMsgPopup(){
+  document.getElementById('msgOverlay').classList.remove('open');
+}
+document.getElementById('msgOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'msgOverlay') closeMsgPopup();
+});
+
+fetch('msg.json', { cache: 'no-store' })
+  .then(r => r.ok ? r.json() : null)
+  .then(data => {
+    if(!data) return;
+    const shouldShow = data.status === true || data.status === 'true';
+    if(!shouldShow) return;
+    if(!data.message) return;
+    document.getElementById('msgBoxText').textContent = data.message;
+    document.getElementById('msgOverlay').classList.add('open');
+  })
+  .catch(err => console.error('Gagal ambil msg.json:', err));
+
+// ============================= //
 // PWA: service worker + custom install banner
 // ============================= //
 if ('serviceWorker' in navigator) {
@@ -1654,7 +1711,7 @@ function openInstallHelp(){
   const btnRow = document.getElementById('installHelpButtons');
 
   if (isInstalled()){
-    textEl.innerHTML = 'TabunganKu sudah ada di perangkat kamu.';
+    textEl.innerHTML = 'Tabungaja sudah ada di perangkat kamu.';
     btnRow.innerHTML = '<button type="button" class="reset-confirm-btn" style="flex:1; background:var(--text); color:var(--bg);" onclick="closeInstallHelp()">Oke</button>';
   } else {
     textEl.innerHTML = 'Install sekarang untuk akses yang lebih cepat.';

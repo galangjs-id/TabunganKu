@@ -1,4 +1,4 @@
-# TabunganKu
+# Tabungaja
 
 Aplikasi pencatatan keuangan (pemasukan & pengeluaran) berbasis web — single-page app, installable sebagai PWA, dengan sistem akun ringan buat sinkronisasi data lintas device.
 
@@ -45,7 +45,7 @@ Aplikasi pencatatan keuangan (pemasukan & pengeluaran) berbasis web — single-p
 ## Struktur Project
 
 ```
-tabunganku/
+tabungaja/
 ├── index.html              # Seluruh UI + logic frontend
 ├── manifest.json            # PWA manifest
 ├── sw.js                     # Service worker (offline cache)
@@ -72,7 +72,7 @@ tabunganku/
 ### 2A. Deploy via Vercel CLI (paling cepat)
 ```bash
 npm i -g vercel
-cd tabunganku
+cd tabungaja
 vercel login
 vercel --prod
 ```

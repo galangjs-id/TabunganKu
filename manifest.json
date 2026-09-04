@@ -1,6 +1,6 @@
 {
-  "name": "TabunganKu - Pencatatan Keuangan",
-  "short_name": "TabunganKu",
+  "name": "Tabungaja - Pencatatan Keuangan",
+  "short_name": "Tabungaja",
   "description": "Aplikasi pencatatan pemasukan & pengeluaran harian",
   "start_url": "./index.html",
   "scope": "./",
