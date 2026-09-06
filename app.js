@@ -12,15 +12,18 @@ const CHART_COLLAPSE_KEY = 'chart_collapsed_v1';
   if(skelChart) skelChart.classList.toggle('collapsed', localStorage.getItem(CHART_COLLAPSE_KEY) === '1');
 })();
 const CATEGORIES = {
-  income: ['Gaji','Bonus','Usaha','Hadiah','Investasi','Uang Saku','Lainnya'],
-  expense: ['Makan','Transport','Belanja','Tagihan','Hiburan','Kesehatan','Lainnya']
+  income: ['Uang Saku','Gaji','Hadiah','Bonus','Lainnya'],
+  expense: ['Jajan','Otomotif','Tagihan','Kesehatan','Lainnya']
 };
 const CATEGORY_ICONS = {
-  'Gaji':'fa-money-bill-wave', 'Bonus':'fa-gift', 'Usaha':'fa-briefcase',
-  'Hadiah':'fa-gift', 'Investasi':'fa-chart-line', 'Uang Saku':'fa-piggy-bank',
-  'Makan':'fa-utensils', 'Transport':'fa-car', 'Belanja':'fa-bag-shopping',
-  'Tagihan':'fa-file-invoice-dollar', 'Hiburan':'fa-film', 'Kesehatan':'fa-heart-pulse',
-  'Lainnya':'fa-ellipsis'
+  'Uang Saku':'fa-piggy-bank', 'Gaji':'fa-money-bill-wave', 'Hadiah':'fa-gift',
+  'Bonus':'fa-coins',
+  'Jajan':'fa-cookie-bite', 'Otomotif':'fa-car', 'Tagihan':'fa-file-invoice-dollar',
+  'Kesehatan':'fa-heart-pulse', 'Lainnya':'fa-ellipsis',
+  // Kategori lama, disisain biar transaksi lawas yang masih kepake nama ini
+  // tetep dapet ikon yang bener (gak muncul lagi di pilihan tambah baru).
+  'Usaha':'fa-briefcase', 'Investasi':'fa-chart-line', 'Hiburan':'fa-film',
+  'Makan':'fa-utensils', 'Transport':'fa-car', 'Belanja':'fa-bag-shopping'
 };
 function catIcon(cat){ return CATEGORY_ICONS[cat] || 'fa-ellipsis'; }
 
@@ -79,14 +82,14 @@ function openSheet(type, editId){
   tag.textContent = type === 'income' ? 'Masuk' : 'Keluar';
   tag.className = 'tag ' + type;
 
-  const catSelect = document.getElementById('category');
-  catSelect.innerHTML = CATEGORIES[type].map(c => `<option value="${c}">${c}</option>`).join('');
+  const cats = CATEGORIES[type];
+  let selectedCat = cats[0];
 
   if(isEdit){
     const t = txns.find(x => x.id === editId);
     if(t){
       document.getElementById('amount').value = t.amount.toLocaleString('id-ID');
-      catSelect.value = t.category;
+      selectedCat = cats.includes(t.category) ? t.category : cats[0];
       document.getElementById('date').value = t.date;
       document.getElementById('note').value = t.note || '';
     }
@@ -95,6 +98,8 @@ function openSheet(type, editId){
     document.getElementById('amount').value = '';
     document.getElementById('note').value = '';
   }
+  document.getElementById('category').value = selectedCat;
+  renderCatPicker(type, selectedCat);
 
   const submitBtn = document.getElementById('submitBtn');
   submitBtn.style.background = type === 'income' ? 'var(--income)' : 'var(--expense)';
@@ -106,6 +111,32 @@ function openSheet(type, editId){
 function closeSheet(){
   document.getElementById('overlay').classList.remove('open');
   editingId = null;
+}
+// Chip picker kategori bikinan sendiri, ganti native <select> yang polos.
+// Warna chip aktif ngikutin warna tipe transaksi (income/expense) biar konsisten
+// sama tombol Simpan & tag di header sheet.
+function renderCatPicker(type, selected){
+  const cats = CATEGORIES[type];
+  const activeColor = type === 'income' ? 'var(--income)' : 'var(--expense)';
+  document.getElementById('catPicker').innerHTML = cats.map(c => {
+    const active = c === selected;
+    const style = active ? ` style="background:${activeColor};border-color:${activeColor};color:#fff;"` : '';
+    return `<button type="button" class="cat-chip${active ? ' active' : ''}" data-cat="${escapeHtml(c)}"${style} onclick="selectCategory('${c.replace(/'/g,"\\'")}')">
+      <i class="fa-solid ${catIcon(c)}"></i><span>${escapeHtml(c)}</span>
+    </button>`;
+  }).join('');
+}
+function selectCategory(c){
+  document.getElementById('category').value = c;
+  const activeColor = currentType === 'income' ? 'var(--income)' : 'var(--expense)';
+  document.querySelectorAll('#catPicker .cat-chip').forEach(btn => {
+    const isActive = btn.dataset.cat === c;
+    btn.classList.toggle('active', isActive);
+    btn.style.background = isActive ? activeColor : '';
+    btn.style.borderColor = isActive ? activeColor : '';
+    btn.style.color = isActive ? '#fff' : '';
+    if(isActive) btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  });
 }
 document.getElementById('overlay').addEventListener('click', (e) => {
   if(e.target.id === 'overlay') closeSheet();

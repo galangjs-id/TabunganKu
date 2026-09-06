@@ -194,15 +194,14 @@
         <label>Jumlah (Rp)</label>
         <input type="text" inputmode="numeric" id="amount" class="amount-input" placeholder="0" required>
       </div>
-      <div class="field-row">
-        <div class="field">
-          <label>Kategori</label>
-          <select id="category" required></select>
-        </div>
-        <div class="field">
-          <label>Tanggal</label>
-          <input type="date" id="date" required>
-        </div>
+      <div class="field">
+        <label>Kategori</label>
+        <input type="hidden" id="category">
+        <div class="cat-picker" id="catPicker"></div>
+      </div>
+      <div class="field">
+        <label>Tanggal</label>
+        <input type="date" id="date" required>
       </div>
       <div class="field">
         <label>Catatan (opsional)</label>
