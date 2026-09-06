@@ -2,6 +2,15 @@ const STORAGE_KEY = 'catatan_kas_txns_v1';
 const THEME_KEY = 'theme_v1';
 const GOAL_KEY = 'savings_goal_v1';
 const CHART_COLLAPSE_KEY = 'chart_collapsed_v1';
+
+// Skeleton kartu grafik kudu nampilin state collapse/expand yang sama kayak
+// kartu aslinya (bukan selalu expanded), biar gak "loncat" pas skeleton ilang.
+// Dijalanin paling awal, sebelum apa pun di-render, biar sempet nge-apply
+// sebelum browser sempet ngegambar skeleton-nya.
+(function syncSkeletonChartCollapse(){
+  const skelChart = document.getElementById('skelChartCard');
+  if(skelChart) skelChart.classList.toggle('collapsed', localStorage.getItem(CHART_COLLAPSE_KEY) === '1');
+})();
 const CATEGORIES = {
   income: ['Gaji','Bonus','Usaha','Hadiah','Investasi','Uang Saku','Lainnya'],
   expense: ['Makan','Transport','Belanja','Tagihan','Hiburan','Kesehatan','Lainnya']
