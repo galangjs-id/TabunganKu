@@ -1,7 +1,9 @@
-const CACHE_NAME = 'tabungaja-cache-v11';
+const CACHE_NAME = 'tabungaja-cache-v12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './style.css',
+  './app.js',
   './manifest.json',
   './icons/icon.png',
   './icons/icon-192.png',
