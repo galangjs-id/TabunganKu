@@ -1,4 +1,6 @@
-const { put, get, list } = require('@vercel/blob');
+const { put, get } = require('@vercel/blob');
+const { checkRateLimit } = require('../_lib/rateLimit');
+const { isNameTaken, reserveName } = require('../_lib/nameIndex');
 
 // Hindari karakter yang gampang ketuker (0/O, 1/I/l) biar enak diketik ulang
 const UID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -16,33 +18,22 @@ async function uidExists(uid) {
   return result !== null;
 }
 
-// Satu nama cuma boleh dipakai satu akun. Field "name" udah ada di tiap
-// users/*.json, jadi tinggal list semua user terus dicocokin — gak perlu index
-// terpisah, otomatis kepakai buat akun lama juga.
-async function nameTaken(name) {
-  const target = name.trim().toLowerCase();
-  const { blobs } = await list({ prefix: 'users/', access: 'private' });
-  for (const blob of blobs) {
-    const result = await get(blob.pathname, { access: 'private', useCache: false });
-    if (!result) continue;
-    const text = await new Response(result.stream).text();
-    const data = JSON.parse(text);
-    if (String(data.name).trim().toLowerCase() === target) return true;
-  }
-  return false;
-}
-
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   try {
+    const rl = await checkRateLimit(req, 'create', 10); // 10 akun baru / menit / IP
+    if (!rl.allowed) {
+      return res.status(429).json({ error: 'Terlalu banyak percobaan, coba lagi sebentar lagi' });
+    }
+
     const { name } = req.body || {};
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ error: 'Nama wajib diisi' });
     }
 
-    if (await nameTaken(name)) {
+    if (await isNameTaken(name)) {
       return res.status(409).json({ error: 'Nama telah digunakan', code: 'NAME_TAKEN' });
     }
 
@@ -69,6 +60,7 @@ module.exports = async function handler(req, res) {
       allowOverwrite: true,
       contentType: 'application/json',
     });
+    await reserveName(name, uid);
 
     return res.status(200).json(data);
   } catch (err) {

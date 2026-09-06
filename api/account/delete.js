@@ -1,10 +1,17 @@
 const { get, del } = require('@vercel/blob');
+const { checkRateLimit } = require('../_lib/rateLimit');
+const { releaseName } = require('../_lib/nameIndex');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   try {
+    const rl = await checkRateLimit(req, 'delete', 10);
+    if (!rl.allowed) {
+      return res.status(429).json({ error: 'Terlalu banyak percobaan, coba lagi sebentar lagi' });
+    }
+
     const { name, uid } = req.body || {};
     if (!name || !uid) {
       return res.status(400).json({ error: 'Nama dan ID wajib diisi' });
@@ -26,6 +33,7 @@ module.exports = async function handler(req, res) {
     }
 
     await del(pathname);
+    await releaseName(data.name);
 
     return res.status(200).json({ ok: true });
   } catch (err) {

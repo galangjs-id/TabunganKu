@@ -1,10 +1,16 @@
 const { get, put } = require('@vercel/blob');
+const { checkRateLimit } = require('../_lib/rateLimit');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   try {
+    const rl = await checkRateLimit(req, 'login', 15); // 15 percobaan / menit / IP
+    if (!rl.allowed) {
+      return res.status(429).json({ error: 'Terlalu banyak percobaan login, coba lagi sebentar lagi' });
+    }
+
     const { name, uid } = req.body || {};
     if (!name || !uid) {
       return res.status(400).json({ error: 'Nama dan ID wajib diisi' });
