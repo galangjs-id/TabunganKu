@@ -883,9 +883,23 @@ render();
 applyChartCollapse(localStorage.getItem(CHART_COLLAPSE_KEY) === '1');
 updateAccountUI();
 
+// Skeleton loading: kartu-kartu nampilin placeholder shimmer selagi nunggu
+// network (khususnya refresh dari server buat akun yang login). Ditandain
+// "siap" via class data-ready di <body>, di-CSS-in di style.css (.wrap-skeleton/.wrap-real).
+let dataReadyShown = false;
+function markDataReady(){
+  if(dataReadyShown) return;
+  dataReadyShown = true;
+  document.body.classList.add('data-ready');
+}
+
 // Kalau lagi login, tarik data terbaru dari server (biar sinkron antar device
 // & tetap aman meski localStorage di HP ini kehapus)
 if(account){
+  // Jaga-jaga kalau fetch nge-hang tanpa resolve/reject, skeleton tetep ilang
+  // otomatis biar gak nyangkut selamanya.
+  const readySafetyTimer = setTimeout(markDataReady, 6000);
+
   fetch('/api/account/refresh', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ name: account.name, uid: account.uid })
@@ -900,7 +914,14 @@ if(account){
     populateMonths();
     render();
   })
-  .catch(err => console.error('Auto-sync gagal:', err));
+  .catch(err => console.error('Auto-sync gagal:', err))
+  .finally(() => {
+    clearTimeout(readySafetyTimer);
+    markDataReady();
+  });
+}else{
+  // Guest (belum login): semua data lokal, gak ada network yang ditunggu.
+  markDataReady();
 }
 
 // ============================= //
