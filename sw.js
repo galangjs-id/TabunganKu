@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabungaja-cache-v20';
+const CACHE_NAME = 'tabungaja-cache-v25';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
